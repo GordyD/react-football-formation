@@ -15,7 +15,9 @@ const playerSpec = {
   beginDrag(props, monitor, component) {
     return { 
       id: props.id,
-      validPositions: props.validPositions 
+      validPositions: props.validPositions,
+      isOnPitch: props.assignedSector !== null,
+      assignedSector: props.assignedSector
     };
   },
   isDragging(props, monitor) {
@@ -24,7 +26,7 @@ const playerSpec = {
   endDrag(props, monitor) {
     const dropResult = monitor.getDropResult();
     if (dropResult) {
-      props.onSelect(props.id, dropResult.id)
+      props.onSelect(props.id, dropResult.id || null)
     }
   }
 }

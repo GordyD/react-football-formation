@@ -11,11 +11,9 @@ import FormationSector from './FormationSector';
 import AvailablePlayers from './AvailablePlayers';
 import { GK, OUTFIELD_POSITION_TYPES, POSITIONALS } from '../constants/positions';
 import playerSet from '../constants/players';
+import * as utils from '../utils';
 
 import './FormationViewer.styl';
-
-const SECTORS = 35;
-const ROWS = 7;
 
 class FormationViewer extends Component {
   static propTypes = {
@@ -29,11 +27,54 @@ class FormationViewer extends Component {
     }
   }
 
+  componentDidMount() {
+    if (window.localStorage && window.localStorage.getItem('selection')) {
+      let selection = JSON.parse(window.localStorage.getItem('selection'));
+      let players = this.state.players.map((player) => {
+        selection.forEach((s) => {
+          if (s.playerId === player.id) {
+            player.assignedSector = s.sectorId;
+          }
+        });
+
+        return player;
+      });
+
+      this.setState({players: players});
+    }
+  }
+
+  clearSelection() {
+    let players = this.state.players.map((player) => {
+      player.assignedSector = null;
+
+      return player;
+    });
+
+    this.setState({players: players});
+
+    if (window.localStorage) {
+      window.localStorage.removeItem('selection');
+    }
+  }
+
+  saveSelection() {
+    let savedTeam = this.state.players
+    .filter((player) => (player.assignedSector !== null))
+    .map((player) => { 
+      return { playerId: player.id, sectorId: player.assignedSector } 
+    });
+
+    if (window.localStorage) {
+      window.localStorage.setItem('selection', JSON.stringify(savedTeam));
+    }
+  }
+
   selectPlayer(id, positionId) {
     var oldAssignedSector = null;
     var swapPlayerId = null;
     var players = this.state.players.map((p) => {
-      if (p.assignedSector === positionId) {
+      if (positionId !== null && p.assignedSector === positionId) {
         swapPlayerId = p.id;
         p.assignedSector = null;
       }
@@ -63,8 +104,12 @@ class FormationViewer extends Component {
     return this.state.players.filter((p) => !p.assignedSector);
   }
 
+  getPlayersOnPitch() {
+    return this.state.players.filter((p) => (!!p.assignedSector && p.assignedSector>= 0));
+  }
+
   renderAvailablePlayers() {
-    return this.getAvailablePlayers().map((player) => {
+    return this.getAvailablePlayers().sort(utils.sortAvailableList).map((player) => {
       return (
         <Player key={player.id} {...player} onSelect={this.selectPlayer.bind(this)} />
       );
@@ -75,9 +120,8 @@ class FormationViewer extends Component {
     let keyDelta = 2;
     let self = this;
 
-    return _.range(SECTORS).map((id) => {
-      let positionId = (OUTFIELD_POSITION_TYPES.length -1 ) - Math.floor(id/ROWS);
-      let positional = POSITIONALS[id%ROWS];
+    return _.range(utils.SECTORS).map((id) => {
+      let sectorInfo = utils.getSectorInfo(id+keyDelta);
       let player = null;
       let players = self.state.players.filter((p) => p.assignedSector === (id+keyDelta));
 
@@ -88,8 +132,9 @@ class FormationViewer extends Component {
         <FormationSector 
           key={`outfield-${id+keyDelta}`} 
           id={id+keyDelta} 
-          position={OUTFIELD_POSITION_TYPES[positionId]}
-          side={positional}
+          position={sectorInfo.position}
+          side={sectorInfo.side}
+          playersOnPitch={this.getPlayersOnPitch()}
         >
           {player}
         </FormationSector>
@@ -107,25 +152,58 @@ class FormationViewer extends Component {
     }
 
     return (
-      <FormationSector id={1} position={GK} side={POSITIONALS[Math.round(POSITIONALS.length/2)]}>
+      <FormationSector 
+        id={sectorId} 
+        position={GK} 
+        side={POSITIONALS[Math.round(POSITIONALS.length/2)]}
+        playersOnPitch={this.getPlayersOnPitch()}
+      >
         {goalkeeper}
       </FormationSector>
     );
   }
 
   render() {
+    var sortedPlayers = this.getPlayersOnPitch().sort(utils.sortTeamList);
+
+    var playerList = sortedPlayers.map((p) => {
+      var { position, side } = utils.getSectorInfo(p.assignedSector);
+      return (
+        <li key={p.id}>
+          {` ${position.key} ${side.key}`} - {p.firstName}{(p.lastName) ? ' ' + p.lastName: ''} 
+        </li>
+      );
+    });
+
+    var formation = utils.getFormation(this.getPlayersOnPitch());
+
+    var saveButton = (this.getPlayersOnPitch().length === utils.VALID_TEAM_SIZE) ?
+      <button className='pure-button pure-button-primary' onClick={this.saveSelection.bind(this)}>Save</button> :
+      <button className='pure-button-disabled' disabled>Save</button>;
+
     return (
       <div className='FormationViewer-Container'>
+        <AvailablePlayers>
+          {this.renderAvailablePlayers()}
+        </AvailablePlayers>
+
         <div className='FormationViewer-Formation'>
           {this.renderOutfieldSectors()}
           {this.renderGoalkeeperSector()}
         </div>
-        <div>
-          <h2>Available Players {this.getAvailablePlayers().length}</h2>
+
+        <div className='FormationViewer-Selection'>
+          <h2>Your Team ({this.getPlayersOnPitch().length}/{utils.VALID_TEAM_SIZE})</h2>
+          <p>Formation {utils.printFormationString(formation)}</p>
+          <ul>
+            {playerList}
+          </ul>
+          <div className='FormationViewer-Options'>
+            <button className='pure-button' onClick={this.clearSelection.bind(this)}>Clear</button>
+            {saveButton}
+          </div>
         </div>
-        <AvailablePlayers>
-          {this.renderAvailablePlayers()}
-        </AvailablePlayers>
+        
       </div>
     );
   }

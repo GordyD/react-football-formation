@@ -9,7 +9,6 @@ var host = 'localhost';
 var devServerPort = 3001;
 
 new WebpackDevServer(webpack(webpackConfig), {
-  contentBase: [ 'build', '/' ].join(''),
   headers: { 'Access-Control-Allow-Origin': '*' },
   historyApiFallback: true,
   hot: true,
