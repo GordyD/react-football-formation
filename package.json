@@ -1,0 +1,42 @@
+{
+  "name": "football-team",
+  "version": "0.1.0",
+  "description": "A Football Team Chooser with Drag and Drop",
+  "main": "index.js",
+  "scripts": {
+    "build": "NODE_ENV=production webpack",
+    "lint": "eslint client",
+    "start": "NODE_ENV=development node webpack.dev.server.js"
+  },
+  "author": "Gordon Dent <gordon@workshape.io>",
+  "license": "ISC",
+  "dependencies": {
+    "classnames": "^2.2.3",
+    "lodash": "^4.6.1",
+    "nib": "^1.1.0",
+    "react": "^0.14.7",
+    "react-dnd": "^2.1.2",
+    "react-dnd-html5-backend": "^2.1.2",
+    "react-dom": "^0.14.7"
+  },
+  "devDependencies": {
+    "babel-core": "^6.6.5",
+    "babel-eslint": "^5.0.0",
+    "babel-loader": "^6.2.4",
+    "babel-preset-es2015": "^6.6.0",
+    "babel-preset-react": "^6.5.0",
+    "babel-preset-react-hmre": "^1.1.0",
+    "babel-preset-stage-0": "^6.5.0",
+    "css-loader": "^0.23.1",
+    "eslint": "^2.3.0",
+    "eslint-plugin-react": "^4.2.0",
+    "file-loader": "^0.8.5",
+    "react-hot-loader": "^1.3.0",
+    "style-loader": "^0.13.0",
+    "stylus": "^0.54.0",
+    "stylus-loader": "^1.5.1",
+    "url-loader": "^0.5.7",
+    "webpack": "^1.12.14",
+    "webpack-dev-server": "^1.14.1"
+  }
+}
